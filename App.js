@@ -1,136 +1,175 @@
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import * as React from 'react';
+//import * as React from 'react';
+import React,{useState, useEffect} from "react";
 import { Image, StyleSheet, Text, View, TouchableOpacity, SafeAreaView, ScrollView,Dimensions } from 'react-native';
-import { Button, Card, ListItem } from 'react-native-elements';
-import Icon from 'react-native-vector-icons/FontAwesome'; 
-import MapView from "react-native-map-clustering";
-import { Marker } from 'react-native-maps';
+import { Button, Card, ListItem,Header } from 'react-native-elements';
+import Icon from 'react-native-vector-icons/FontAwesome';
+//SOLUCION A ERROR CRYPTO--PARACONFIGURARLO A  BASE 64 PRIMERO YARN ADD BASE-64 EN CMD
+import { decode, encode } from 'base-64'
+global.crypto = require("@firebase/firestore");
+global.crypto.getRandomValues = byteArray => { for (let i = 0; i < byteArray.length; i++) { byteArray[i] = Math.floor(256 * Math.random()); } }
+
+if (!global.btoa) { global.btoa = encode; }
+
+if (!global.atob) { global.atob = decode; }
+
+
+
+//BACKEND
+import DatosContacto from './app/contacto/Contacto';
+import ListaProductos from './app/catalogo/ListaProducto';
+import ListaPromociones from './app/promociones/ListaPromociones';
+import * as firebase from 'firebase/app';
+import 'firebase/firestore';
+import { firebaseApp } from './app/FireBase';
+const db = firebase.firestore(firebaseApp);
+
 
 function ContactoScreen() {
+
+  const [contacto,setContacto]=useState ([]);
+  const [startcontacto,setStartContacto]=useState (null);
+  const [isLoading,setIsLoading]=useState (false);
+  const [totalcontacto,setTotalContacto]=useState (0);
+  const limitContacto=8;
+ 
+  useEffect(() => {
+    db.collection("contacto").get().then((snap)=> {
+      setTotalContacto(snap.size);
+    
+    });
+    ( async()=>{
+
+      const resultContacto=[];
+      const contacto=db
+      .collection("contacto")
+      .orderBy("nombre","desc")
+      .limit(limitContacto);
+      
+      await contacto.get().then(response => {
+       setStartContacto(response.docs[response.docs.length-1]);
+
+
+        response.forEach(doc => {
+         let contactos=doc.data();
+         contactos.id=doc.id;
+         resultContacto.push({contactos});
+         });
+       setContacto(resultContacto);
+      
+        });
+
+      })();
+   
+  },[]);
+
+  if(contacto.length===0 ) return<NotFoundArreglos/>;
+
+
   return (
     <View style={styles.container}>
-      <View style={{alignContent:'center', alignSelf: 'center', marginTop: 20}}>
-        <Image style={styles.imgConStyle} source={require('./assets/icon.png')}/>
-      </View>
-      <Text style={styles.contactoStyle}>Coyito Rivera</Text>
-      <Text style={styles.contactoStyle}>Teléfono: 6621345678</Text>
-      <Text style={styles.contactoStyle}>Ubicación:</Text>
-      {/* <View style={{alignContent:'center', alignSelf: 'center', marginTop: 20}}>
-        <MapView style={styles.mapStyle} 
-          initialRegion={{
-            latitude: 29.1274658,
-            longitude: -110.9680919,
-            latitudeDelta: 0.0900,
-            longitudeDelta: 0.0421,
-          }}>
-          <Marker coordinate={{ latitude: 29.1274658, longitude: -110.9680919}} pinColor={'#DC0303'} title={'Floreria'} description={"Instituto Tecnologico de Hermosillo"}/>
-        </MapView>
-      </View> */}
+        <DatosContacto  contacto={contacto} isLoading={isLoading} />
+     
     </View>
   );
 }
 
 function ArreglosFlorales({ navigation }) {
+ //BACKEND
+  const [producto,setProducto]=useState ([]);
+  const [startproducto,setStartProducto]=useState (null);
+  const [isLoading,setIsLoading]=useState (false);
+  const [totalproducto,setTotalProducto]=useState (0);
+  //const //limitProducto=4;
+  
+  useEffect(() => {
+    db.collection("catalogo").get().then((snap)=> {
+      setTotalProducto(snap.size);
+      console.log(snap.size);
+    });
+
+    (async()=>{
+
+      const resultCatalogo=[];
+      const producto=db
+      .collection("catalogo")
+      .orderBy("descripcion","asc");
+      
+      await producto.get().then(response => {
+       setStartProducto(response.docs[response.docs.length-1]);
+
+
+        response.forEach(doc => {
+         let productos=doc.data();
+         productos.id=doc.id;
+         resultCatalogo.push({productos});
+         });
+       setProducto(resultCatalogo);
+       console.log(resultCatalogo);
+        });
+
+      })();
+      
+  },[]);
+ 
+  if(producto.length===0 ) return<NotFoundArreglos/>;
   return (
     <View style={styles.container}>
-      <View>
-        <ScrollView style={styles.body}>
-          <Card
-            title='Arreglo Cerdito'>
-              <View>
-                <Image style={styles.imgStyle} source={require('./RecursosInterfacesApp/Catalogo/arreglo1.png')}/>
-              </View>
-          </Card>
-          <Card
-            title='Arreglo Girasoles'>
-              <View>
-                <Image style={styles.imgStyle} source={require('./RecursosInterfacesApp/Catalogo/arreglo2.png')}/>
-              </View>
-          </Card>
-          <Card
-            title='Arreglo Flores Variadas'>
-              <View>
-                <Image style={styles.imgStyle} source={require('./RecursosInterfacesApp/Catalogo/arreglo3.png')}/>
-              </View>
-          </Card>
-          <Card
-            title='Arreglo Rosas'>
-              <View>
-                <Image style={styles.imgStyle} source={require('./RecursosInterfacesApp/Catalogo/arreglo4.jpg')}/>
-              </View>
-          </Card>
-        </ScrollView>
-      </View>
-      {/* <View style={styles.footer}>
-        <TouchableOpacity style={styles.buttonStyle}>
-          <Button type="clear"
-            icon={
-              <Icon
-                name="phone"
-                size={20}
-                color="white"
-              />
-            }
-            onPress={() => navigation.navigate('Contacto')}
-          />
-        </TouchableOpacity>
-      </View> */}
+     <ListaProductos producto={producto} isLoading={isLoading} />
+    
     </View>
   );
 }
 
 
 function ArreglosEventos({ navigation }) {
+  //BACKEND
+  const [promocion,setPromocion]=useState ([]);
+  const [startpromocion,setStartPromocion]=useState (null);
+  const [isLoading,setIsLoading]=useState (false);
+  const [totalpromocion,setTotalPromocion]=useState (0);
+  //const limitPromocion=8;
+ 
+  useEffect(() => {
+    db.collection("promocion").get().then((snap)=> {
+      setTotalPromocion(snap.size);
+
+    });
+    ( async()=>{
+
+      const resultPromocion=[];
+      const promocion=db
+      .collection("promocion")
+      .orderBy("imagen","desc");
+      //limit(limitPromocion);
+      
+      await promocion.get().then(response => {
+       setStartPromocion(response.docs[response.docs.length-1]);
+
+
+        response.forEach(doc => {
+         let promociones=doc.data();
+         promociones.id=doc.id;
+         resultPromocion.push({promociones});
+         });
+       setPromocion(resultPromocion);
+      
+        });
+
+      })();
+   
+  },[]);
+
+  if(promocion.length===0 ) return<NotFoundArreglos/>;
+
+    
   return (
+
     <View style={styles.container}>
-      <View>
-        <ScrollView style={styles.body}>
-          <Card
-            title='Arreglo 180 Rosas'>
-              <View>
-                <Image style={styles.imgStyle} source={require('./RecursosInterfacesApp/Promociones/promo1.png')}/>
-              </View>
-              <Text style={{textAlign:'center'}}>$6,500</Text>
-          </Card>
-          <Card
-            title='Arreglo Floral "Perrito"'>
-              <View>
-                <Image style={styles.imgStyle} source={require('./RecursosInterfacesApp/Promociones/promo2.png')}/>
-              </View>
-              <Text style={{textAlign:'center'}}>$500</Text>
-          </Card>
-          <Card
-            title='Ramo 100 rosas'>
-              <View>
-                <Image style={styles.imgStyle} source={require('./RecursosInterfacesApp/Promociones/promo3.png')}/>
-              </View>
-              <Text style={{textAlign:'center'}}>$3,00</Text>
-          </Card>
-          <Card
-            title='Ramo Lilies y Rosas'>
-              <View>
-                <Image style={styles.imgStyle} source={require('./RecursosInterfacesApp/Promociones/promo4.png')}/>
-              </View>
-              <Text style={{textAlign:'center'}}>$750</Text>
-          </Card>
-        </ScrollView>
-      </View>
-      {/* <View style={styles.footer}>
-        <TouchableOpacity style={styles.buttonStyle}>
-          <Button type="clear"
-            icon={
-              <Icon
-                name="phone"
-                size={20}
-                color="white"
-              />
-            }
-            onPress={() => navigation.navigate('Contacto')}
-          />
-        </TouchableOpacity>
-      </View> */}
+      
+      <ListaPromociones promocion={promocion} isLoading={isLoading}/>
     </View>
   );
 }
@@ -140,7 +179,7 @@ const AFlorales = createStackNavigator();
 function AFloralesScreen() {
   return (
     <AFlorales.Navigator>
-      <AFlorales.Screen name="Catalogo" component={ArreglosFlorales} />
+      <AFlorales.Screen name="Catálogo" component={ArreglosFlorales} />
       <AFlorales.Screen name="Contacto" component={ContactoScreen} />
     </AFlorales.Navigator>
   );
@@ -150,7 +189,9 @@ const AEventos = createStackNavigator();
 
 function AEventosScreen() {
   return (
+    
     <AEventos.Navigator>
+      
       <AEventos.Screen name="Promociones" component={ArreglosEventos} />
       <AEventos.Screen name="Contacto" component={ContactoScreen} />
     </AEventos.Navigator>
@@ -174,7 +215,7 @@ export default function App() {
   return (
     <NavigationContainer>
       <Tab.Navigator tabBarPosition='bottom' tabBarOptions={{  indicatorStyle: {backgroundColor:'#DC0303'}}}>
-        <Tab.Screen name="Catalogo" component={AFloralesScreen} />
+        <Tab.Screen name="Catálogo" component={AFloralesScreen} />
         <Tab.Screen name="Promociones" component={AEventosScreen} />
         <Tab.Screen name="Contacto" component={ContactosScreen} />
       </Tab.Navigator>
@@ -182,12 +223,29 @@ export default function App() {
   );
 }
 
+//funcion para cuando no haya nada yapenas este cargando
+function NotFoundArreglos(){
+  return(
+    <View style={{flex:1,alignItems:'center',justifyContent:'center'
+    }}>
+      <Image  source={require('./assets/icon.png')}size={50}/>
+     
+    </View>
+  )
+}
+
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'stretch',
     backgroundColor:'#ffccae',
-    },  
+    }, 
+    button: {
+      alignItems: "center",
+      backgroundColor: "#DDDDDD",
+      padding: 10
+      },   
   buttonStyle:{  
     width: 50, 
     height:50,

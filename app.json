@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Blank Template",
-    "slug": "floreriaBien.2",
+    "name": "Florería Eleonora",
+    "slug": "floreriaBien2",
     "privacy": "public",
     "sdkVersion": "36.0.0",
     "platforms": [
@@ -25,6 +25,11 @@
     ],
     "ios": {
       "supportsTablet": true
-    }
+    },
+    "android": {
+      "package": "com.danielaaguilar.floreriaeleonora",
+      "versionCode":2
+    },
+    "description": "Aplicación de Florería, Permite ver las promociones y productos que brinda la floreria Eleonora"
   }
 }
